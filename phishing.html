@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAVUT.</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- STYLES GÉNÉRAUX --- */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            background-color: #ffffff;
+            color: #202124;
+        }
+
+        /* --- BARRE DE NAVIGATION --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 50px;
+            border-bottom: 1px solid #dadce0;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 100;
+        }
+
+        .logo { font-size: 22px; font-weight: 500; color: #5f6368; }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #5f6368;
+            margin: 0 15px;
+            font-size: 14px;
+        }
+
+        .btn-login {
+            background-color: #1a73e8;
+            color: white;
+            padding: 8px 24px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-login:hover { background-color: #1557b0; }
+
+        /* --- CONTENU PUBLIC --- */
+        .hero {
+            text-align: center;
+            padding: 100px 20px;
+            background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+        }
+
+        .hero h1 { font-size: 48px; margin-bottom: 20px; }
+        .hero p { font-size: 18px; color: #5f6368; max-width: 600px; margin: 0 auto; }
+
+        /* --- MODAL DE CONNEXION (L'OVERLAY) --- */
+        #login-overlay {
+            display: none; /* Masqué par défaut */
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-card {
+            background-color: #ffffff;
+            width: 450px;
+            padding: 48px 40px;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px; right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #5f6368;
+        }
+
+        /* --- STYLES INPUTS (Google Style) --- */
+        .input-group { margin: 20px 0; text-align: left; }
+        input {
+            width: 100%; padding: 13px 15px; border: 1px solid #dadce0;
+            border-radius: 4px; font-size: 16px; box-sizing: border-box;
+        }
+        input:focus { outline: none; border: 2px solid #1a73e8; }
+        
+        .user-identity {
+            display: inline-block; border: 1px solid #dadce0; border-radius: 20px;
+            padding: 5px 15px; margin-bottom: 20px; font-size: 14px;
+        }
+
+        .footer-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; }
+        .btn-text { color: #1a73e8; background: none; border: none; font-weight: 500; cursor: pointer; }
+
+        /* --- ÉTAT CONNECTÉ --- */
+        #logged-in-content { display: none; padding: 50px; text-align: center; background: #e8f0fe; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">RAVUT.</div>
+        <div class="nav-links">
+            <a href="#">Produits</a>
+            <a href="#">Solutions</a>
+            <a href="#">Tarifs</a>
+            <button class="btn-login" id="nav-login-btn" onclick="openLogin()">Connexion</button>
+        </div>
+    </nav>
+
+    <section class="hero" id="public-hero">
+        <h1>Gagner de l'argent, GRATUITEMENT.</h1>
+        <p>Notre site attend plus que vous.</p>
+		<p>Connectez-vous pour gérer votre capital personnel.</p>
+    </section>
+
+    <section id="logged-in-content">
+        <h1>Bienvenue, <span id="user-name"></span> !</h1>
+        <p>Vous avez maintenant accès à votre tableau de bord privé.</p>
+        <button class="btn-login" onclick="location.reload()">Se déconnecter</button>
+    </section>
+
+    <div id="login-overlay">
+        <div class="login-card">
+            <span class="close-modal" onclick="closeLogin()">&times;</span>
+            <div style="font-size: 24px; margin-bottom: 10px;">MonSite</div>
+
+            <div id="step-email">
+                <h2>Connexion</h2>
+                <p>Utilisez votre compte MonSite</p>
+                <div class="input-group">
+                    <input type="email" id="email-field" placeholder="Email ou téléphone">
+                </div>
+                <div class="footer-actions">
+                    <button class="btn-text">Créer un compte</button>
+                    <button class="btn-login" onclick="nextStep()">Suivant</button>
+                </div>
+            </div>
+
+            <div id="step-password" style="display: none;">
+                <h2>Bienvenue</h2>
+                <div class="user-identity" id="display-email"></div>
+                <div class="input-group">
+                    <input type="password" id="password-field" placeholder="Saisissez votre mot de passe">
+                </div>
+                <label style="font-size: 14px; display: block; text-align: left;">
+                    <input type="checkbox" onclick="togglePass()"> Afficher le mot de passe
+                </label>
+                <div class="footer-actions">
+                    <button class="btn-text" onclick="prevStep()">Retour</button>
+                    <button class="btn-login" onclick="finishLogin()">Connexion</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const overlay = document.getElementById('login-overlay');
+        const stepEmail = document.getElementById('step-email');
+        const stepPassword = document.getElementById('step-password');
+        const emailField = document.getElementById('email-field');
+        const passwordField = document.getElementById('password-field');
+
+        // Ouvrir / Fermer le Modal
+        function openLogin() { overlay.style.display = 'flex'; }
+        function closeLogin() { overlay.style.display = 'none'; }
+
+        // Navigation dans le Modal
+        function nextStep() {
+            if(emailField.value !== "") {
+                document.getElementById('display-email').innerText = emailField.value;
+                stepEmail.style.display = 'none';
+                stepPassword.style.display = 'block';
+            }
+        }
+        function prevStep() {
+            stepPassword.style.display = 'none';
+            stepEmail.style.display = 'block';
+        }
+
+        // Afficher le mot de passe
+        function togglePass() {
+            passwordField.type = passwordField.type === "password" ? "text" : "password";
+        }
+
+        // Action finale de connexion
+        function finishLogin() {
+            if(passwordField.value.length >= 4) {
+                // Fermer le modal
+                closeLogin();
+                // Changer l'affichage du site
+                document.getElementById('public-hero').style.display = 'none';
+                document.getElementById('logged-in-content').style.display = 'block';
+                document.getElementById('user-name').innerText = emailField.value;
+                document.getElementById('nav-login-btn').innerText = "Mon Compte";
+            } else {
+                alert("Mot de passe invalide.");
+            }
+        }
+
+        // Fermer si on clique en dehors de la carte
+        window.onclick = function(event) {
+            if (event.target == overlay) { closeLogin(); }
+        }
+    </script>
+
+</body>
+</html>
